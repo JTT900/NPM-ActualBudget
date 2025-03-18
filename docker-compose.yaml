@@ -1,0 +1,27 @@
+services:
+  nginxproxymanager:
+    image: 'docker.io/jc21/nginx-proxy-manager:latest'
+    container_name: nginxproxymanager
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81' # Expose UI on port 81
+      - '443:443'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+
+  actual_server:
+    image: docker.io/actualbudget/actual-server:latest
+    container_name: actual-server
+    ports:
+      - '5006:5006'  # Expose Actual Budget on port 5006
+    volumes:
+      - ./actual-data:/data  # Persistent storage for Actual Budget
+    healthcheck:
+      test: ['CMD-SHELL', 'node src/scripts/health-check.js']
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
